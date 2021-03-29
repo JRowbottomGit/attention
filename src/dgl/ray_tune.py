@@ -16,11 +16,6 @@ from ray.tune import CLIReporter
 from ray.tune.schedulers import ASHAScheduler, FIFOScheduler
 from train import train, evaluate, test, get_dataset, get_optimizer
 
-"""
-python3 ray_tune.py --dataset ogbn-arxiv --lr 0.005 --add_source --function transformer --attention_dim 16 --hidden_dim 128 --heads 4 --input_dropout 0 --decay 0 --adjoint --adjoint_method rk4 --method rk4 --time 5.08 --epoch 500 --num_samples 1 --name ogbn-arxiv-test --gpus 1 --grace_period 50 
-
-"""
-
 
 def average_test(models, datas):
     results = [test(model, data) for model, data in zip(models, datas)]
@@ -285,7 +280,6 @@ if __name__ == "__main__":
                         help="AGNN,GAT")
     parser.add_argument("--att-type", type=str, default="pearson",
                         help="AGNN,cosine,scaled_dot,pearson,spearman")
-
     parser.add_argument("--dataset", type=str, default="Cora", help="Cora, Citeseer, Pubmed")
 
     # ray args
