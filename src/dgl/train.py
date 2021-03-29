@@ -231,7 +231,7 @@ if __name__ == '__main__':
                         help="skip re-evaluate the validation set")
 
     parser.add_argument("--optimizer", type=str, default="adam",
-                        help="    'sgd','rmsprop','adagrad','adam','adamax'")
+                        help="'sgd','rmsprop','adagrad','adam','adamax'")
     parser.add_argument("--model", type=str, default="AGNN",
                         help="AGNN,GAT")
 

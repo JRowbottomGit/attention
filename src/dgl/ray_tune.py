@@ -280,11 +280,25 @@ if __name__ == "__main__":
     parser.add_argument('--fastmode', action="store_true", default=False,
                         help="skip re-evaluate the validation set")
     parser.add_argument("--optimizer", type=str, default="adam",
-                        help="    'sgd','rmsprop','adagrad','adam','adamax'")
+                        help="'sgd','rmsprop','adagrad','adam','adamax'")
     parser.add_argument("--model", type=str, default="AGNN",
                         help="AGNN,GAT")
     parser.add_argument("--att-type", type=str, default="pearson",
                         help="AGNN,cosine,scaled_dot,pearson,spearman")
+
+    # ray args
+    parser.add_argument("--num_samples", type=int, default=20, help="number of ray trials")
+    parser.add_argument("--gpus", type=float, default=0, help="number of gpus per trial. Can be fractional")
+    parser.add_argument("--cpus", type=float, default=1, help="number of cpus per trial. Can be fractional")
+    parser.add_argument(
+        "--grace_period", type=int, default=5, help="number of epochs to wait before terminating trials"
+    )
+    parser.add_argument(
+        "--reduction_factor", type=int, default=4, help="number of trials is halved after this many epochs"
+    )
+    parser.add_argument("--name", type=str, default="ray_exp")
+    parser.add_argument("--num_splits", type=int, default=0, help="Number of random splits >= 0. 0 for planetoid split")
+    parser.add_argument("--num_init", type=int, default=4, help="Number of random initializations >= 0")
 
     args = parser.parse_args()
     print(args)
