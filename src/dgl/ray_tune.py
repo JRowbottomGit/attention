@@ -286,6 +286,8 @@ if __name__ == "__main__":
     parser.add_argument("--att-type", type=str, default="pearson",
                         help="AGNN,cosine,scaled_dot,pearson,spearman")
 
+    parser.add_argument("--dataset", type=str, default="Cora", help="Cora, Citeseer, Pubmed")
+
     # ray args
     parser.add_argument("--num_samples", type=int, default=20, help="number of ray trials")
     parser.add_argument("--gpus", type=float, default=0, help="number of gpus per trial. Can be fractional")
