@@ -82,7 +82,7 @@ def train_ray_rand(opt, checkpoint_dir=None, data_dir="../data"):
 #                 backward_nfe=model.bm.sum)
 
 
-def train_ray(opt, checkpoint_dir=None, data_dir="../data"):
+def train_ray(args, checkpoint_dir=None, data_dir="../data"):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     data = get_dataset(args)
     g = data[0]
@@ -120,9 +120,9 @@ def train_ray(opt, checkpoint_dir=None, data_dir="../data"):
 
     models = []
     optimizers = []
-    datas = [g for i in range(opt["num_init"])]
+    datas = [g for i in range(args.num_init)]
 
-    for split in range(opt["num_init"]):
+    for split in range(args.num_init):
         if args.model == 'GAT':
             model = GAT(g,
                         args.num_layers,
@@ -154,7 +154,7 @@ def train_ray(opt, checkpoint_dir=None, data_dir="../data"):
         # model = model.to(device)
         parameters = [p for p in model.parameters() if p.requires_grad]
 
-        optimizer = get_optimizer(opt["optimizer"], parameters, lr=opt["lr"], weight_decay=opt["decay"])
+        optimizer = get_optimizer(args.optimizer, parameters, lr=args.lr, weight_decay=args.decay)
         optimizers.append(optimizer)
 
         # The `checkpoint_dir` parameter gets passed by Ray Tune when a checkpoint
@@ -165,7 +165,7 @@ def train_ray(opt, checkpoint_dir=None, data_dir="../data"):
             model.load_state_dict(model_state)
             optimizer.load_state_dict(optimizer_state)
 
-    for epoch in range(1, opt["epoch"]):
+    for epoch in range(1, args.epoch):
         loss = np.mean([train_this(model, optimizer, data)[0] for model, optimizer in zip(models, optimizers)])
         train_accs, val_accs, tmp_test_accs = average_test(models, datas)
         with tune.checkpoint_dir(step=epoch) as checkpoint_dir:
@@ -177,8 +177,8 @@ def train_ray(opt, checkpoint_dir=None, data_dir="../data"):
 
 
 def set_cora_search_space(opt):
-    opt["decay"] = tune.loguniform(0.001, 0.1)  # weight decay l2 reg
-    opt["hidden_dim"] = tune.sample_from(lambda _: 2 ** np.random.randint(6, 8))  # hidden dim of X in dX/dt
+    args.decay = tune.loguniform(0.001, 0.1)  # weight decay l2 reg
+    args.hidden_dim = tune.sample_from(lambda _: 2 ** np.random.randint(6, 8))  # hidden dim of X in dX/dt
     opt["lr"] = tune.uniform(0.01, 0.2)
     opt["input_dropout"] = 0.5
     opt["optimizer"] = tune.choice(["adam", "adamax"])
