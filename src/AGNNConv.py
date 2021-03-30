@@ -85,7 +85,7 @@ class AGNNConv(nn.Module):
             e = self.beta * cos
         elif self.opt['att_type'] == "scaled_dot":
             if isinstance(feat, tuple):
-                graph.dstdata['h'] = feat_dst
+                graph.dstdata['h'] = feat_dst / th.sqrt(th.tensor(self.opt['num_hidden']))
             # compute dot
             graph.apply_edges(fn.u_dot_v('h', 'h', 'dot'))
             dot = graph.edata.pop('dot')

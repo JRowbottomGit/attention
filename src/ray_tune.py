@@ -54,7 +54,7 @@ def train_ray_rand(opt, checkpoint_dir=None, data_dir="../data"):
 #     model, data = model.to(device), dataset.data.to(device)
 #     parameters = [p for p in model.parameters() if p.requires_grad]
 #
-#     optimizer = get_optimizer(opt["optimizer"], parameters, lr=opt["lr"], weight_decay=opt["decay"])
+#     optimizer = get_optimizer(opt["optimizer"], parameters, lr=opt["lr"], weight_decay=opt["weight_decay"])
 #     optimizers.append(optimizer)
 #
 #     # The `checkpoint_dir` parameter gets passed by Ray Tune when a checkpoint
@@ -149,7 +149,7 @@ def train_ray(opt, checkpoint_dir=None, data_dir="../data"):
         # model = model.to(device)
         parameters = [p for p in model.parameters() if p.requires_grad]
 
-        optimizer = get_optimizer(opt['optimizer'], parameters, lr=opt['lr'], weight_decay=opt['decay'])
+        optimizer = get_optimizer(opt['optimizer'], parameters, lr=opt['lr'], weight_decay=opt['weight_decay'])
         optimizers.append(optimizer)
 
         # The `checkpoint_dir` parameter gets passed by Ray Tune when a checkpoint
@@ -172,9 +172,10 @@ def train_ray(opt, checkpoint_dir=None, data_dir="../data"):
 
 
 def set_cora_search_space(opt):
-    opt['decay'] = tune.loguniform(0.001, 0.1)  # weight decay l2 reg
-    opt['hidden_dim'] = tune.sample_from(lambda _: 2 ** np.random.randint(6, 8))  # hidden dim of X in dX/dt
-    opt["lr"] = tune.uniform(0.01, 0.2)
+    opt["att_type"] = tune.choice(["cosine","scaled_dot","pearson","spearman"])
+    opt['weight_decay'] = tune.loguniform(1e-4, 1e-1)  # weight decay l2 reg
+    opt['num_hidden'] = tune.sample_from(lambda _: 2 ** np.random.randint(2, 6))  # hidden dim of X in dX/dt
+    opt["lr"] = tune.loguniform(0.0001, 0.2)
     opt["in_drop"] = tune.uniform(0.4, 0.6)
     opt["optimizer"] = tune.choice(["adam", "adamax"])
     # opt["heads"] = tune.sample_from(lambda _: 2 ** np.random.randint(0, 4))  #

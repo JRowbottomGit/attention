@@ -233,7 +233,7 @@ if __name__ == '__main__':
     parser.add_argument("--model", type=str, default="AGNN",
                         help="AGNN,GAT")
 
-    parser.add_argument("--att-type", type=str, default="pearson",
+    parser.add_argument("--att-type", type=str, default="scaled_dot",
                         help="AGNN,cosine,scaled_dot,pearson,spearman")
 
     args = parser.parse_args()
