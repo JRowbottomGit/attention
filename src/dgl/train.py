@@ -92,14 +92,14 @@ def train(model, optimizer, features, train_mask, labels):
     return loss, logits
 
 
-def main(args):
-    data = get_dataset(args)
+def main(opt):
+    data = get_dataset(opt)
     g = data[0]
-    if args.gpu < 0:
+    if opt['gpu'] < 0:
         cuda = False
     else:
         cuda = True
-        g = g.int().to(args.gpu)
+        g = g.int().to(opt['gpu'])
 
     features = g.ndata['feat']
     labels = g.ndata['label']
@@ -125,8 +125,8 @@ def main(args):
     g = dgl.add_self_loop(g)
     n_edges = g.number_of_edges()
     # create model
-    heads = ([args.num_heads] * args.num_layers) + [args.num_out_heads]
-    if args.model == 'GAT':
+    heads = (opt['num_heads'] * opt['num_layers']) + opt['num_out_heads']
+    if opt['model'] == 'GAT':
         model = GAT(g,
                     args.num_layers,
                     num_feats,
@@ -240,6 +240,6 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     print(args)
-
-    main(args)
+    opt = vars(args)
+    main(opt)
 
