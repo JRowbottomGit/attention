@@ -173,11 +173,12 @@ def train_ray(opt, checkpoint_dir=None, data_dir="../data"):
 
 def set_cora_search_space(opt):
     opt["att_type"] = tune.choice(["cosine","scaled_dot","pearson","spearman"])
-    opt['weight_decay'] = tune.loguniform(1e-4, 1e-1)  # weight decay l2 reg
-    opt['num_hidden'] = tune.sample_from(lambda _: 2 ** np.random.randint(2, 6))  # hidden dim of X in dX/dt
+    opt['weight_decay'] = tune.loguniform(5e-5, 1e-3)  # weight decay l2 reg
+    opt['num_hidden'] = tune.sample_from(lambda _: 2 ** np.random.randint(4, 7))  # hidden dim of X in dX/dt
     opt["lr"] = tune.loguniform(0.0001, 0.2)
     opt["in_drop"] = tune.uniform(0.4, 0.6)
-    opt["optimizer"] = tune.choice(["adam", "adamax"])
+    opt["optimizer"] = "adamax"
+    # opt["optimizer"] = tune.choice(["adam", "adamax"])
     # opt["heads"] = tune.sample_from(lambda _: 2 ** np.random.randint(0, 4))  #
     # opt["attention_dim"] = tune.sample_from(lambda _: 2 ** np.random.randint(4, 8))  # hidden dim for attention
     return opt
