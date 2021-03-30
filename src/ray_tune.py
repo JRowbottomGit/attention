@@ -111,7 +111,7 @@ def train_ray(opt, checkpoint_dir=None, data_dir="../data"):
     g = dgl.add_self_loop(g)
     n_edges = g.number_of_edges()
     # create model
-    heads = (opt['num_heads'] * opt['num_layers']) + opt['num_out_heads']
+    heads = ([opt['num_heads']] * opt['num_layers']) + [opt['num_out_heads']]
 
     models = []
     optimizers = []

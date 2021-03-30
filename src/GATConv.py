@@ -185,6 +185,7 @@ class GATConv(nn.Module):
             graph.apply_edges(fn.u_dot_v('norm_h', 'norm_h', 'cos'))
             e = graph.edata.pop('cos')
         elif self.opt['att_type'] == "spearman":
+            #todo check all these operations
             el = feat_src * self.attn_l
             er = feat_dst * self.attn_r
             graph.srcdata.update({'ft': feat_src, 'el': el})
