@@ -26,24 +26,25 @@ class GAT(nn.Module):
                  feat_drop,
                  attn_drop,
                  negative_slope,
-                 residual):
+                 residual,
+                 opt):
         super(GAT, self).__init__()
         self.g = g
         self.num_layers = num_layers
         self.gat_layers = nn.ModuleList()
         self.activation = activation
         # input projection (no residual)
-        self.gat_layers.append(GATConv(
+        self.gat_layers.append(GATConv(opt,
             in_dim, num_hidden, heads[0],
             feat_drop, attn_drop, negative_slope, False, self.activation))
         # hidden layers
         for l in range(1, num_layers):
             # due to multi-head, the in_dim = num_hidden * num_heads
-            self.gat_layers.append(GATConv(
+            self.gat_layers.append(GATConv(opt,
                 num_hidden * heads[l-1], num_hidden, heads[l],
                 feat_drop, attn_drop, negative_slope, residual, self.activation))
         # output projection
-        self.gat_layers.append(GATConv(
+        self.gat_layers.append(GATConv(opt,
             num_hidden * heads[-2], num_classes, heads[-1],
             feat_drop, attn_drop, negative_slope, residual, None))
 

@@ -124,7 +124,7 @@ def main(opt):
     g = dgl.add_self_loop(g)
     n_edges = g.number_of_edges()
     # create model
-    heads = (opt['num_heads'] * opt['num_layers']) + opt['num_out_heads']
+    heads = ([opt['num_heads']] * opt['num_layers']) + [opt['num_out_heads']]
     if opt['model'] == 'GAT':
         model = GAT(g,
                     opt['num_layers'],
@@ -136,7 +136,8 @@ def main(opt):
                     opt['in_drop'],
                     opt['attn_drop'],
                     opt['negative_slope'],
-                    opt['residual'])
+                    opt['residual'],
+                    opt)
     elif opt['model'] == 'AGNN':
         model = AGNN(g,
                      opt['num_layers'],
@@ -230,10 +231,9 @@ if __name__ == '__main__':
 
     parser.add_argument("--optimizer", type=str, default="adam",
                         help="'sgd','rmsprop','adagrad','adam','adamax'")
-    parser.add_argument("--model", type=str, default="AGNN",
+    parser.add_argument("--model", type=str, default="GAT",
                         help="AGNN,GAT")
-
-    parser.add_argument("--att-type", type=str, default="scaled_dot",
+    parser.add_argument("--att-type", type=str, default="GAT",
                         help="AGNN,cosine,scaled_dot,pearson,spearman")
 
     args = parser.parse_args()

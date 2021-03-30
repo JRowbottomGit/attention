@@ -129,7 +129,8 @@ def train_ray(opt, checkpoint_dir=None, data_dir="../data"):
                         opt['in_drop'],
                         opt['attn_drop'],
                         opt['negative_slope'],
-                        opt['residual'])
+                        opt['residual'],
+                        opt)
         elif opt['model'] == 'AGNN':
             model = AGNN(g,
                          opt['num_layers'],
@@ -173,6 +174,7 @@ def train_ray(opt, checkpoint_dir=None, data_dir="../data"):
 
 def set_cora_search_space(opt):
     opt["att_type"] = tune.choice(["cosine","scaled_dot","pearson","spearman"])
+    opt["num_layers"] = tune.choice([1,2,4,8])
     opt['weight_decay'] = tune.loguniform(5e-5, 1e-3)  # weight decay l2 reg
     opt['num_hidden'] = tune.sample_from(lambda _: 2 ** np.random.randint(4, 7))  # hidden dim of X in dX/dt
     opt["lr"] = tune.loguniform(0.0001, 0.2)

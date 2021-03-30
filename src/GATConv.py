@@ -54,7 +54,7 @@ class GATConv(nn.Module):
         If not None, applies an activation function to the updated node features.
         Default: ``None``.
     """
-    def __init__(self,
+    def __init__(self,opt,
                  in_feats,
                  out_feats,
                  num_heads,
@@ -64,6 +64,7 @@ class GATConv(nn.Module):
                  residual=False,
                  activation=None):
         super(GATConv, self).__init__()
+        self.opt = opt
         self._num_heads = num_heads
         self._in_src_feats, self._in_dst_feats = expand_as_pair(in_feats)
         self._out_feats = out_feats
@@ -134,26 +135,32 @@ class GATConv(nn.Module):
             feat_src = feat_dst = self.fc(h_src).view(
                 -1, self._num_heads, self._out_feats)
 
-
-        # NOTE: GAT paper uses "first concatenation then linear projection"
-        # to compute attention scores, while ours is "first projection then
-        # addition", the two approaches are mathematically equivalent:
-        # We decompose the weight vector a mentioned in the paper into
-        # [a_l || a_r], then
-        # a^T [Wh_i || Wh_j] = a_l Wh_i + a_r Wh_j
-        # Our implementation is much efficient because we do not need to
-        # save [Wh_i || Wh_j] on edges, which is not memory-efficient. Plus,
-        # addition could be optimized with DGL's built-in function u_add_v,
-        # which further speeds up computation and saves memory footprint.
-        el = (feat_src * self.attn_l).sum(dim=-1).unsqueeze(-1)
-        er = (feat_dst * self.attn_r).sum(dim=-1).unsqueeze(-1)
-        graph.srcdata.update({'ft': feat_src, 'el': el})
-        graph.dstdata.update({'er': er})
-        # compute edge attention, el and er are a_l Wh_i and a_r Wh_j respectively.
-        graph.apply_edges(fn.u_add_v('el', 'er', 'e'))
-        e = self.leaky_relu(graph.edata.pop('e'))
-
-
+        if self.opt['att_type'] == "GAT":
+            # NOTE: GAT paper uses "first concatenation then linear projection"
+            # to compute attention scores, while ours is "first projection then
+            # addition", the two approaches are mathematically equivalent:
+            # We decompose the weight vector a mentioned in the paper into
+            # [a_l || a_r], then
+            # a^T [Wh_i || Wh_j] = a_l Wh_i + a_r Wh_j
+            # Our implementation is much efficient because we do not need to
+            # save [Wh_i || Wh_j] on edges, which is not memory-efficient. Plus,
+            # addition could be optimized with DGL's built-in function u_add_v,
+            # which further speeds up computation and saves memory footprint.
+            el = (feat_src * self.attn_l).sum(dim=-1).unsqueeze(-1)
+            er = (feat_dst * self.attn_r).sum(dim=-1).unsqueeze(-1)
+            graph.srcdata.update({'ft': feat_src, 'el': el})
+            graph.dstdata.update({'er': er})
+            # compute edge attention, el and er are a_l Wh_i and a_r Wh_j respectively.
+            graph.apply_edges(fn.u_add_v('el', 'er', 'e'))
+            e = self.leaky_relu(graph.edata.pop('e'))
+        elif self.opt['att_type'] == "cosine":
+            pass
+        elif self.opt['att_type'] == "scaled_dot":
+            pass
+        elif self.opt['att_type'] == "pearson":
+            pass
+        elif self.opt['att_type'] == "spearman":
+            pass
 
         # compute softmax
         graph.edata['a'] = self.attn_drop(edge_softmax(graph, e))
@@ -161,6 +168,7 @@ class GATConv(nn.Module):
         graph.update_all(fn.u_mul_e('ft', 'a', 'm'),
                          fn.sum('m', 'ft'))
         rst = graph.dstdata['ft']
+
         # residual
         if self.res_fc is not None:
             resval = self.res_fc(h_dst).view(h_dst.shape[0], -1, self._out_feats)
