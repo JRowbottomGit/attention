@@ -2,12 +2,12 @@
 # pylint: disable= no-member, arguments-differ, invalid-name
 import torch as th
 from torch import nn
-
+from torch.nn import functional as F
 # from .... import function as fn
 # from ..softmax import edge_softmax
 # from ..utils import Identity
 # from ....utils import expand_as_pair
-
+from torchsort import soft_rank, soft_sort
 from dgl import function as fn
 from dgl.nn.pytorch.utils import Identity
 from dgl.ops import edge_softmax
@@ -154,13 +154,64 @@ class GATConv(nn.Module):
             graph.apply_edges(fn.u_add_v('el', 'er', 'e'))
             e = self.leaky_relu(graph.edata.pop('e'))
         elif self.opt['att_type'] == "cosine":
-            pass
+            el = feat_src * self.attn_l
+            er = feat_dst * self.attn_r
+            graph.srcdata.update({'ft': feat_src, 'el': el})
+            graph.dstdata.update({'er': er})
+            graph.srcdata['norm_h'] = F.normalize(el, p=2, dim=-1)
+            graph.dstdata['norm_h'] = F.normalize(er, p=2, dim=-1)
+            # compute cosine distance
+            graph.apply_edges(fn.u_dot_v('norm_h', 'norm_h', 'cos'))
+            e = graph.edata.pop('cos')
         elif self.opt['att_type'] == "scaled_dot":
-            pass
+            el = feat_src * self.attn_l
+            er = feat_dst * self.attn_r / th.sqrt(th.tensor(self.opt['num_hidden']
+                                                            /self.opt['num_heads']))
+            graph.srcdata.update({'ft': feat_src, 'el': el})
+            graph.dstdata.update({'er': er})
+            # compute dot
+            graph.apply_edges(fn.u_dot_v('el', 'er', 'dot'))
+            e = graph.edata.pop('dot')
         elif self.opt['att_type'] == "pearson":
-            pass
+            el = feat_src * self.attn_l
+            er = feat_dst * self.attn_r
+            graph.srcdata.update({'ft': feat_src, 'el': el})
+            graph.dstdata.update({'er': er})
+            src_mu = th.mean(el, dim=1, keepdim=True)
+            graph.srcdata['norm_h'] = F.normalize(el - src_mu, p=2, dim=-1)
+            dst_mu = th.mean(er, dim=1, keepdim=True)
+            graph.dstdata['norm_h'] = F.normalize(er - dst_mu, p=2, dim=-1)
+            # compute cosine distance
+            graph.apply_edges(fn.u_dot_v('norm_h', 'norm_h', 'cos'))
+            e = graph.edata.pop('cos')
         elif self.opt['att_type'] == "spearman":
-            pass
+            el = feat_src * self.attn_l
+            er = feat_dst * self.attn_r
+            graph.srcdata.update({'ft': feat_src, 'el': el})
+            graph.dstdata.update({'er': er})
+
+            el = el.view(-1, self._out_feats)
+            er = er.view(-1, self._out_feats)
+
+            el = soft_rank(el, regularization_strength=1.0)
+            er = soft_rank(er, regularization_strength=1.0)
+
+            ranked_src = soft_rank(1000*F.normalize(el, p=2, dim=-1))#, regularization_strength=0.1)
+            ranked_dst = soft_rank(1000 * F.normalize(er, p=2, dim=-1), regularization_strength=0.1)
+            src_mu = th.mean(ranked_src, dim=1, keepdim=True)
+            dst_mu = th.mean(ranked_dst, dim=1, keepdim=True)
+
+            el = F.normalize(ranked_src - src_mu, p=2, dim=-1)
+            er = F.normalize(ranked_dst - dst_mu, p=2, dim=-1)
+            el = el.view(-1, self._num_heads, self._out_feats)
+            er = er.view(-1, self._num_heads, self._out_feats)
+            graph.srcdata['norm_h'] = F.normalize(el, p=2, dim=-1)
+            graph.dstdata['norm_h'] = F.normalize(er, p=2, dim=-1)
+            # compute cosine distance
+            graph.apply_edges(fn.u_dot_v('norm_h', 'norm_h', 'cos'))
+            e = graph.edata.pop('cos')
+
+
 
         # compute softmax
         graph.edata['a'] = self.attn_drop(edge_softmax(graph, e))

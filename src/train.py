@@ -233,8 +233,8 @@ if __name__ == '__main__':
                         help="'sgd','rmsprop','adagrad','adam','adamax'")
     parser.add_argument("--model", type=str, default="GAT",
                         help="AGNN,GAT")
-    parser.add_argument("--att-type", type=str, default="GAT",
-                        help="AGNN,cosine,scaled_dot,pearson,spearman")
+    parser.add_argument("--att-type", type=str, default="spearman",
+                        help="AGNN,GAT,cosine,scaled_dot,pearson,spearman")
 
     args = parser.parse_args()
     print(args)
