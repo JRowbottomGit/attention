@@ -65,7 +65,7 @@ def train_ray_rand(opt, checkpoint_dir=None, data_dir="../data"):
 #       model.load_state_dict(model_state)
 #       optimizer.load_state_dict(optimizer_state)
 #
-#   for epoch in range(1, opt["epoch"]):
+#   for epoch in range(1, opt["epochs"]):
 #     loss = np.mean([train_this(model, optimizer, data) for model, optimizer, data in zip(models, optimizers, datas)])
 #     train_accs, val_accs, tmp_test_accs = average_test(models, datas)
 #     with tune.checkpoint_dir(step=epoch) as checkpoint_dir:
@@ -160,7 +160,7 @@ def train_ray(opt, checkpoint_dir=None, data_dir="../data"):
             model.load_state_dict(model_state)
             optimizer.load_state_dict(optimizer_state)
 
-    for epoch in range(1, opt['epoch']):
+    for epoch in range(1, opt['epochs']):
         loss = np.mean([train_this(model, optimizer, data)[0] for model, optimizer in zip(models, optimizers)])
         train_accs, val_accs, tmp_test_accs = average_test(models, datas)
         with tune.checkpoint_dir(step=epoch) as checkpoint_dir:
