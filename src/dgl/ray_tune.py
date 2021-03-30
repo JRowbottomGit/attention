@@ -292,6 +292,8 @@ if __name__ == "__main__":
     parser.add_argument("--name", type=str, default="ray_exp")
     parser.add_argument("--num_splits", type=int, default=0, help="Number of random splits >= 0. 0 for planetoid split")
     parser.add_argument("--num_init", type=int, default=4, help="Number of random initializations >= 0")
+    parser.add_argument('--metric', type=str, default='accuracy',
+                        help='metric to sort the hyperparameter tuning runs on')
 
     args = parser.parse_args()
     print(args)
