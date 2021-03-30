@@ -77,15 +77,15 @@ def train_ray_rand(opt, checkpoint_dir=None, data_dir="../data"):
 #                 backward_nfe=model.bm.sum)
 
 
-def train_ray(args, checkpoint_dir=None, data_dir="../data"):
+def train_ray(opt, checkpoint_dir=None, data_dir="../data"):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    data = get_dataset(args)
+    data = get_dataset(opt)
     g = data[0]
-    if args.gpu < 0:
+    if opt['gpu'] < 0:
         cuda = False
     else:
         cuda = True
-        g = g.int().to(args.gpu)
+        g = g.int().to(opt['gpu'])
 
     features = g.ndata['feat']
     labels = g.ndata['label']
@@ -111,35 +111,35 @@ def train_ray(args, checkpoint_dir=None, data_dir="../data"):
     g = dgl.add_self_loop(g)
     n_edges = g.number_of_edges()
     # create model
-    heads = ([args.num_heads] * args.num_layers) + [args.num_out_heads]
+    heads = (opt['num_heads'] * opt['num_layers']) + opt['num_out_heads']
 
     models = []
     optimizers = []
-    datas = [g for i in range(args.num_init)]
+    datas = [g for i in range(opt['num_init'])]
 
-    for split in range(args.num_init):
-        if args.model == 'GAT':
+    for split in range(opt['num_init']):
+        if opt['model'] == 'GAT':
             model = GAT(g,
-                        args.num_layers,
+                        opt['num_layers'],
                         num_feats,
-                        args.num_hidden,
+                        opt['num_hidden'],
                         n_classes,
                         heads,
                         F.elu,
-                        args.in_drop,
-                        args.attn_drop,
-                        args.negative_slope,
-                        args.residual)
-        elif args.model == 'AGNN':
+                        opt['in_drop'],
+                        opt['attn_drop'],
+                        opt['negative_slope'],
+                        opt['residual'])
+        elif opt['model'] == 'AGNN':
             model = AGNN(g,
-                         args.num_layers,
+                         opt['num_layers'],
                          num_feats,
-                         args.num_hidden,
+                         opt['num_hidden'],
                          n_classes,
-                         args.in_drop,
-                         args)
-        train_this = train
+                         opt['in_drop'],
+                         opt)
 
+        train_this = train
         model = model.to(device)
         models.append(model)
 
@@ -149,7 +149,7 @@ def train_ray(args, checkpoint_dir=None, data_dir="../data"):
         # model = model.to(device)
         parameters = [p for p in model.parameters() if p.requires_grad]
 
-        optimizer = get_optimizer(args.optimizer, parameters, lr=args.lr, weight_decay=args.decay)
+        optimizer = get_optimizer(opt['optimizer'], parameters, lr=opt['lr'], weight_decay=opt['decay'])
         optimizers.append(optimizer)
 
         # The `checkpoint_dir` parameter gets passed by Ray Tune when a checkpoint
@@ -160,7 +160,7 @@ def train_ray(args, checkpoint_dir=None, data_dir="../data"):
             model.load_state_dict(model_state)
             optimizer.load_state_dict(optimizer_state)
 
-    for epoch in range(1, args.epoch):
+    for epoch in range(1, opt['epoch']):
         loss = np.mean([train_this(model, optimizer, data)[0] for model, optimizer in zip(models, optimizers)])
         train_accs, val_accs, tmp_test_accs = average_test(models, datas)
         with tune.checkpoint_dir(step=epoch) as checkpoint_dir:
@@ -172,8 +172,8 @@ def train_ray(args, checkpoint_dir=None, data_dir="../data"):
 
 
 def set_cora_search_space(opt):
-    args.decay = tune.loguniform(0.001, 0.1)  # weight decay l2 reg
-    args.hidden_dim = tune.sample_from(lambda _: 2 ** np.random.randint(6, 8))  # hidden dim of X in dX/dt
+    opt['decay'] = tune.loguniform(0.001, 0.1)  # weight decay l2 reg
+    opt['hidden_dim'] = tune.sample_from(lambda _: 2 ** np.random.randint(6, 8))  # hidden dim of X in dX/dt
     opt["lr"] = tune.uniform(0.01, 0.2)
     opt["input_dropout"] = 0.5
     opt["optimizer"] = tune.choice(["adam", "adamax"])
@@ -194,11 +194,11 @@ def set_citeseer_search_space(opt):
 
 
 def set_search_space(opt):
-    if opt["dataset"] == "Cora":
+    if opt["dataset"] == "cora":
         return set_cora_search_space(opt)
-    elif opt["dataset"] == "Pubmed":
+    elif opt["dataset"] == "pubmed":
         return set_pubmed_search_space(opt)
-    elif opt["dataset"] == "Citeseer":
+    elif opt["dataset"] == "citeseer":
         return set_citeseer_search_space(opt)
         return set_arxiv_search_space(opt)
 
@@ -280,7 +280,6 @@ if __name__ == "__main__":
                         help="AGNN,GAT")
     parser.add_argument("--att-type", type=str, default="pearson",
                         help="AGNN,cosine,scaled_dot,pearson,spearman")
-    parser.add_argument("--dataset", type=str, default="Cora", help="Cora, Citeseer, Pubmed")
 
     # ray args
     parser.add_argument("--num_samples", type=int, default=20, help="number of ray trials")

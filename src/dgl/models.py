@@ -63,7 +63,7 @@ class AGNN(nn.Module):
                  num_hidden,
                  num_classes,
                  feat_drop,
-                 args):
+                 opt):
         super(AGNN, self).__init__()
         self.g = g
         self.num_layers = num_layers
@@ -76,11 +76,10 @@ class AGNN(nn.Module):
         # self.agnn_layers.append(nn.ReLU())
         # hidden layers
         for l in range(num_layers):
-            self.agnn_layers.append(AGNNConv(args))
+            self.agnn_layers.append(AGNNConv(opt))
         # output projection
         self.W1 = nn.Linear(num_hidden, num_classes, bias=False)
         self.agnn_layers.append(self.W1)
-        self.args = args
     def forward(self, inputs):
         h = inputs
         h = self.agnn_layers[0](h) #dropout

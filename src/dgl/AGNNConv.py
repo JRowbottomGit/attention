@@ -32,11 +32,11 @@ class AGNNConv(nn.Module):
     learn_beta : bool, optional
         If True, :math:`\beta` will be learnable parameter.
     """
-    def __init__(self,args,
+    def __init__(self,opt,
                  init_beta=1.,
                  learn_beta=True):
         super(AGNNConv, self).__init__()
-        self.args = args
+        self.opt = opt
         if learn_beta:
             self.beta = nn.Parameter(th.Tensor([init_beta]))
         else:
@@ -66,7 +66,7 @@ class AGNNConv(nn.Module):
 
         feat_src, feat_dst = expand_as_pair(feat)
         graph.srcdata['h'] = feat_src
-        if self.args.att_type == "AGNN":
+        if self.opt['att_type'] == "AGNN":
             graph.srcdata['norm_h'] = F.normalize(feat_src, p=2, dim=-1)
             if isinstance(feat, tuple):
                 graph.dstdata['norm_h'] = F.normalize(feat_dst, p=2, dim=-1)
@@ -75,7 +75,7 @@ class AGNNConv(nn.Module):
             cos = graph.edata.pop('cos')
             e = self.beta * cos
         #SAME AS AGNN
-        elif self.args.att_type == "cosine":
+        elif self.opt['att_type'] == "cosine":
             graph.srcdata['norm_h'] = F.normalize(feat_src, p=2, dim=-1)
             if isinstance(feat, tuple):
                 graph.dstdata['norm_h'] = F.normalize(feat_dst, p=2, dim=-1)
@@ -83,14 +83,14 @@ class AGNNConv(nn.Module):
             graph.apply_edges(fn.u_dot_v('norm_h', 'norm_h', 'cos'))
             cos = graph.edata.pop('cos')
             e = self.beta * cos
-        elif self.args.att_type == "scaled_dot":
+        elif self.opt['att_type'] == "scaled_dot":
             if isinstance(feat, tuple):
                 graph.dstdata['h'] = feat_dst
             # compute dot
             graph.apply_edges(fn.u_dot_v('h', 'h', 'dot'))
             dot = graph.edata.pop('dot')
             e = self.beta * dot
-        elif self.args.att_type == "pearson":
+        elif self.opt['att_type'] == "pearson":
             src_mu = th.mean(feat_src, dim=1, keepdim=True)
             graph.srcdata['norm_h'] = F.normalize(feat_src - src_mu, p=2, dim=-1)
             if isinstance(feat, tuple):
@@ -100,7 +100,7 @@ class AGNNConv(nn.Module):
             graph.apply_edges(fn.u_dot_v('norm_h', 'norm_h', 'cos'))
             cos = graph.edata.pop('cos')
             e = self.beta * cos
-        elif self.args.att_type == "spearman":
+        elif self.opt['att_type'] == "spearman":
             # F.normalize(feat_src, p=2, dim=1).detach().numpy()
             ranked_src = soft_rank(1000*F.normalize(feat_src, p=2, dim=-1))#, regularization_strength=0.1)
             src_mu = th.mean(ranked_src, dim=1, keepdim=True)

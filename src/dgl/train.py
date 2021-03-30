@@ -24,16 +24,16 @@ from models import GAT, AGNN
 from utils import EarlyStopping
 
 
-def get_dataset(args):
+def get_dataset(opt):
     # load and preprocess dataset
-    if args.dataset == 'cora':
+    if opt['dataset'] == 'cora':
         data = CoraGraphDataset()
-    elif args.dataset == 'citeseer':
+    elif opt['dataset'] == 'citeseer':
         data = CiteseerGraphDataset()
-    elif args.dataset == 'pubmed':
+    elif opt['dataset'] == 'pubmed':
         data = PubmedGraphDataset()
     else:
-        raise ValueError('Unknown dataset: {}'.format(args.dataset))
+        raise ValueError('Unknown dataset: {}'.format(opt['dataset']))
     return data
 
 
@@ -128,37 +128,37 @@ def main(opt):
     heads = (opt['num_heads'] * opt['num_layers']) + opt['num_out_heads']
     if opt['model'] == 'GAT':
         model = GAT(g,
-                    args.num_layers,
+                    opt['num_layers'],
                     num_feats,
-                    args.num_hidden,
+                    opt['num_hidden'],
                     n_classes,
                     heads,
                     F.elu,
-                    args.in_drop,
-                    args.attn_drop,
-                    args.negative_slope,
-                    args.residual)
-    elif args.model == 'AGNN':
+                    opt['in_drop'],
+                    opt['attn_drop'],
+                    opt['negative_slope'],
+                    opt['residual'])
+    elif opt['model'] == 'AGNN':
         model = AGNN(g,
-                     args.num_layers,
+                     opt['num_layers'],
                      num_feats,
-                     args.num_hidden,
+                     opt['num_hidden'],
                      n_classes,
-                     args.in_drop,
-                     args)
+                     opt['in_drop'],
+                     opt)
     print(model)
-    if args.early_stop:
+    if opt['early_stop']:
         stopper = EarlyStopping(patience=100)
     if cuda:
         model.cuda()
 
     # use optimizer
-    optimizer = get_optimizer(args.optimizer, parameters=model.parameters(),
-                                lr=args.lr, weight_decay=args.weight_decay)
+    optimizer = get_optimizer(opt['optimizer'], parameters=model.parameters(),
+                                lr=opt['lr'], weight_decay=opt['weight_decay'])
 
     # initialize graph
     dur = []
-    for epoch in range(args.epochs):
+    for epoch in range(opt['epochs']):
         # model.train()
         if epoch >= 3:
             t0 = time.time()
@@ -177,11 +177,11 @@ def main(opt):
 
         train_acc = accuracy(logits[train_mask], labels[train_mask])
 
-        if args.fastmode:
+        if opt['fastmode']:
             val_acc = accuracy(logits[val_mask], labels[val_mask])
         else:
             val_acc = evaluate(model, features, labels, val_mask)
-            if args.early_stop:
+            if opt['early_stop']:
                 if stopper.step(val_acc, model):
                     break
 
@@ -191,7 +191,7 @@ def main(opt):
                      val_acc, n_edges / np.mean(dur) / 1000))
 
     print()
-    if args.early_stop:
+    if opt['early_stop']:
         model.load_state_dict(torch.load('es_checkpoint.pt'))
     acc = evaluate(model, features, labels, test_mask)
     print("Test Accuracy {:.4f}".format(acc))
