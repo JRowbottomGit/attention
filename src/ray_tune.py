@@ -175,9 +175,8 @@ def set_cora_search_space(opt):
     opt['decay'] = tune.loguniform(0.001, 0.1)  # weight decay l2 reg
     opt['hidden_dim'] = tune.sample_from(lambda _: 2 ** np.random.randint(6, 8))  # hidden dim of X in dX/dt
     opt["lr"] = tune.uniform(0.01, 0.2)
-    opt["input_dropout"] = 0.5
+    opt["in_drop"] = tune.uniform(0.4, 0.6)
     opt["optimizer"] = tune.choice(["adam", "adamax"])
-    opt["dropout"] = tune.uniform(0, 0.15)  # output dropout
     # opt["heads"] = tune.sample_from(lambda _: 2 ** np.random.randint(0, 4))  #
     # opt["attention_dim"] = tune.sample_from(lambda _: 2 ** np.random.randint(4, 8))  # hidden dim for attention
     return opt
