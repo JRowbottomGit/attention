@@ -93,7 +93,7 @@ def train_ray(opt, checkpoint_dir=None, data_dir="../data"):
     val_mask = g.ndata['val_mask']
     test_mask = g.ndata['test_mask']
     num_feats = features.shape[1]
-    n_classes = data.num_labels
+    n_classes = data.num_classes
     n_edges = data.graph.number_of_edges()
     print("""----Data statistics------'
     #Edges %d
@@ -161,7 +161,7 @@ def train_ray(opt, checkpoint_dir=None, data_dir="../data"):
             optimizer.load_state_dict(optimizer_state)
 
     for epoch in range(1, opt['epochs']):
-        loss = np.mean([train_this(model, optimizer, features, train_mask, labels)[0] for model, optimizer in zip(models, optimizers)])
+        loss = np.mean([train_this(model, optimizer, features, train_mask, labels)[0].item() for model, optimizer in zip(models, optimizers)])
         train_accs, val_accs, tmp_test_accs = average_test(models, datas)
         with tune.checkpoint_dir(step=epoch) as checkpoint_dir:
             best = np.argmax(val_accs)

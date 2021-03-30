@@ -67,10 +67,9 @@ def evaluate(model, features, labels, mask):
         return accuracy(logits, labels)
 
 @torch.no_grad()
-def test(model, g):  # opt required for runtime polymorphism
+def test(model, g):
   model.eval()
   features = g.ndata['feat']
-
   logits = model(features)
   accs = []
   for mask_type in ['train_mask', 'val_mask', 'test_mask']:
@@ -165,7 +164,6 @@ def main(opt):
         # forward
         # logits = model(features)
         # loss = loss_fcn(logits[train_mask], labels[train_mask])
-
         # optimizer.zero_grad()
         # loss.backward()
         # optimizer.step()
