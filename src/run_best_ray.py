@@ -13,7 +13,7 @@ from utils import get_sem, mean_confidence_interval
 
 def loop_best(opt):
   models = ['AGNN','GAT']
-  layers = [1,2]#,4,8,16]
+  layers = ['1','2']#,4,8,16]
   att_type_AGNN = ['AGNN','cosine','scaled_dot','pearson','spearman']
   att_type_GAT = ['GAT','cosine','scaled_dot','pearson','spearman']
   for model in models:
@@ -76,11 +76,11 @@ def get_best_specific_params_dir(opt, layer, model, att_type):
   df.columns = [c.replace('config/', '') for c in df.columns]
   print(df)
   # # newdf = df.loc[(df.num_layers == layers) & (df.model == model) & (df.att_type == att_type)]
-  # print(layer)
-  # print(model)
-  # print(att_type)
+  print(layer)
+  print(model)
+  print(att_type)
   newdf = df.loc[(df['num_layers'] == layer) & (df['model'] == model) & (df['att_type'] == att_type)]
-
+  print(newdf)
   best_params_dir = newdf.sort_values('accuracy', ascending=False)['logdir'].iloc[opt['index']]
   return best_params_dir
 
