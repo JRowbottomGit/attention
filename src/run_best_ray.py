@@ -77,8 +77,12 @@ def get_best_specific_params_dir(opt, layer, model, att_type):
   print(df)
   # # newdf = df.loc[(df.num_layers == layers) & (df.model == model) & (df.att_type == att_type)]
   print(layer)
+  print(df['num_layers'].unique())
   print(model)
+  print(df['model'].unique())
   print(att_type)
+  print(df['att_type'].unique())
+
   newdf = df.loc[(df['num_layers'] == layer) & (df['model'] == model) & (df['att_type'] == att_type)]
   print(newdf)
   best_params_dir = newdf.sort_values('accuracy', ascending=False)['logdir'].iloc[opt['index']]
