@@ -172,6 +172,110 @@ def train_ray(opt, checkpoint_dir=None, data_dir="../data"):
                     train_acc=np.mean(train_accs))
 
 
+def train_ray_int(opt, checkpoint_dir=None, data_dir="../data"):
+
+  device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+  data = get_dataset(opt)
+  g = data[0]
+  if opt['gpu'] < 0:
+      cuda = False
+  else:
+      cuda = True
+      g = g.int().to(opt['gpu'])
+
+  # if opt["num_splits"] > 0:
+  #   dataset.data = set_train_val_test_split(
+  #     23 * np.random.randint(0, opt["num_splits"]),  # random prime 23 to make the splits 'more' random. Could remove
+  #     dataset.data,
+  #     num_development=5000 if opt["dataset"] == "CoauthorCS" else 1500)
+
+  features = g.ndata['feat']
+  labels = g.ndata['label']
+  train_mask = g.ndata['train_mask']
+  val_mask = g.ndata['val_mask']
+  test_mask = g.ndata['test_mask']
+  num_feats = features.shape[1]
+  n_classes = data.num_classes
+  n_edges = data.graph.number_of_edges()
+  print("""----Data statistics------'
+  #Edges %d
+  #Classes %d
+  #Train samples %d
+  #Val samples %d
+  #Test samples %d""" %
+        (n_edges, n_classes,
+         train_mask.int().sum().item(),
+         val_mask.int().sum().item(),
+         test_mask.int().sum().item()))
+
+  # add self loop
+  g = dgl.remove_self_loop(g)
+  g = dgl.add_self_loop(g)
+  n_edges = g.number_of_edges()
+  # create model
+  heads = ([opt['num_heads']] * opt['num_layers']) + [opt['num_out_heads']]
+  if opt['model'] == 'GAT':
+      model = GAT(g,
+                  opt['num_layers'],
+                  num_feats,
+                  opt['num_hidden'],
+                  n_classes,
+                  heads,
+                  F.elu,
+                  opt['in_drop'],
+                  opt['attn_drop'],
+                  opt['negative_slope'],
+                  opt['residual'],
+                  opt)
+  elif opt['model'] == 'AGNN':
+      model = AGNN(g,
+                   opt['num_layers'],
+                   num_feats,
+                   opt['num_hidden'],
+                   n_classes,
+                   opt['in_drop'],
+                   opt)
+
+  model = model.to(device)
+  if torch.cuda.device_count() > 1:
+    model = nn.DataParallel(model)
+  parameters = [p for p in model.parameters() if p.requires_grad]
+  optimizer = get_optimizer(opt["optimizer"], parameters, lr=opt["lr"], weight_decay=opt["decay"])
+
+  if checkpoint_dir:
+    checkpoint = os.path.join(checkpoint_dir, "checkpoint")
+    model_state, optimizer_state = torch.load(checkpoint)
+    model.load_state_dict(model_state)
+    optimizer.load_state_dict(optimizer_state)
+
+  this_test = test_OGB if opt['dataset'] == 'ogbn-arxiv' else test
+  best_time = best_epoch = train_acc = val_acc = test_acc = 0
+  for epoch in range(1, opt["epoch"]):
+    loss = train(model, optimizer, data)
+
+    if opt["no_early"]:
+      tmp_train_acc, tmp_val_acc, tmp_test_acc = this_test(model, data, opt)
+      best_time = opt['time']
+    else:
+      tmp_train_acc, tmp_val_acc, tmp_test_acc = this_test(model, data, opt)
+    if tmp_val_acc > val_acc:
+      best_epoch = epoch
+      train_acc = tmp_train_acc
+      val_acc = tmp_val_acc
+      test_acc = tmp_test_acc
+    if model.odeblock.test_integrator.solver.best_val > val_acc:
+      best_epoch = epoch
+      val_acc = model.odeblock.test_integrator.solver.best_val
+      test_acc = model.odeblock.test_integrator.solver.best_test
+      train_acc = model.odeblock.test_integrator.solver.best_train
+      best_time = model.odeblock.test_integrator.solver.best_time
+    with tune.checkpoint_dir(step=epoch) as checkpoint_dir:
+      path = os.path.join(checkpoint_dir, "checkpoint")
+      torch.save((model.state_dict(), optimizer.state_dict()), path)
+    tune.report(loss=loss, accuracy=val_acc, test_acc=test_acc, train_acc=train_acc, best_time=best_time,
+                best_epoch=best_epoch)
+
+
 def set_cora_search_space(opt):
     opt["model"] = "GAT"
     opt["att_type"] = tune.choice(["GAT","cosine","scaled_dot","pearson","spearman"])
@@ -283,7 +387,7 @@ if __name__ == "__main__":
     parser.add_argument("--model", type=str, default="AGNN",
                         help="AGNN,GAT")
     parser.add_argument("--att-type", type=str, default="pearson",
-                        help="AGNN,cosine,scaled_dot,pearson,spearman")
+                        help="AGNN,GAT,cosine,scaled_dot,pearson,spearman")
 
     # ray args
     parser.add_argument("--num_samples", type=int, default=20, help="number of ray trials")

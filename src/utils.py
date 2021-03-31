@@ -1,5 +1,7 @@
 import numpy as np
 import torch
+import scipy
+from scipy.stats import sem
 
 
 class EarlyStopping:
@@ -28,3 +30,32 @@ class EarlyStopping:
     def save_checkpoint(self, model):
         '''Saves model when validation loss decrease.'''
         torch.save(model.state_dict(), 'es_checkpoint.pt')
+
+
+def mean_confidence_interval(data, confidence=0.95):
+  """
+  As number of samples will be < 10 use t-test for the mean confidence intervals
+  :param data: NDarray of metric means
+  :param confidence: The desired confidence interval
+  :return: Float confidence interval
+  """
+  if len(data) < 2:
+    return 0
+  a = 1.0 * np.array(data)
+  n = len(a)
+  _, se = np.mean(a), scipy.stats.sem(a)
+  h = se * scipy.stats.t.ppf((1 + confidence) / 2., n - 1)
+  return h
+
+
+def get_sem(vec):
+  """
+  wrapper around the scipy standard error metric
+  :param vec: List of metric means
+  :return:
+  """
+  if len(vec) > 1:
+    retval = sem(vec)
+  else:
+    retval = 0.
+  return retval

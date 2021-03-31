@@ -19,7 +19,7 @@ import torch.nn.functional as F
 import dgl
 from dgl.data import register_data_args
 from dgl.data import CoraGraphDataset, CiteseerGraphDataset, PubmedGraphDataset
-
+from dgl.data.utils import split_dataset
 from models import GAT, AGNN
 from utils import EarlyStopping
 
