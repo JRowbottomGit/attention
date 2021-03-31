@@ -14,8 +14,8 @@ from utils import get_sem, mean_confidence_interval
 def loop_best(opt):
   models = ['AGNN','GAT']
   layers = ['1','2']#,4,8,16]
-  att_type_AGNN = ['AGNN','cosine','scaled_dot','pearson','spearman']
-  att_type_GAT = ['GAT','cosine','scaled_dot','pearson','spearman']
+  att_type_AGNN = ['cosine','scaled_dot','pearson','spearman']
+  att_type_GAT = ['cosine','scaled_dot','pearson','spearman']
   for model in models:
     for layer in layers:
       for att_type in att_type_AGNN if model == 'AGNN' else att_type_GAT:
