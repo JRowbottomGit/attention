@@ -254,10 +254,10 @@ def train_ray_int(opt, checkpoint_dir=None, data_dir="../data"):
     # loss = train(model, optimizer, data)
     loss = train_this(model, optimizer, features, train_mask, labels)[0].item()
     if opt["no_early"]:
-      tmp_train_acc, tmp_val_acc, tmp_test_acc = this_test(model, data)
+      tmp_train_acc, tmp_val_acc, tmp_test_acc = this_test(model, g)
       best_time = opt['time']
     else:
-      tmp_train_acc, tmp_val_acc, tmp_test_acc = this_test(model, data)
+      tmp_train_acc, tmp_val_acc, tmp_test_acc = this_test(model, g)
     if tmp_val_acc > val_acc:
       best_epoch = epoch
       train_acc = tmp_train_acc
