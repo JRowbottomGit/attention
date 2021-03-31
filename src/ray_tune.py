@@ -247,12 +247,12 @@ def train_ray_int(opt, checkpoint_dir=None, data_dir="../data"):
     model_state, optimizer_state = torch.load(checkpoint)
     model.load_state_dict(model_state)
     optimizer.load_state_dict(optimizer_state)
-
+  train_this = train
   this_test = test_OGB if opt['dataset'] == 'ogbn-arxiv' else test
   best_time = best_epoch = train_acc = val_acc = test_acc = 0
   for epoch in range(1, opt["epoch"]):
-    loss = train(model, optimizer, data)
-
+    # loss = train(model, optimizer, data)
+    loss = train_this(model, optimizer, features, train_mask, labels)[0].item()
     if opt["no_early"]:
       tmp_train_acc, tmp_val_acc, tmp_test_acc = this_test(model, data, opt)
       best_time = opt['time']
