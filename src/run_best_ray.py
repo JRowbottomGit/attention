@@ -64,9 +64,6 @@ def run_best_params(opt):
     progress_reporter=reporter,
     raise_on_failed_trial=False)
 
-  print("RESULT")
-  print(result)
-
   df = result.dataframe(metric=opt['metric'], mode="max").sort_values(opt['metric'], ascending=False)
   try:
     df.to_csv('../ray_results/{}_{}.csv'.format(name, time.strftime("%Y%m%d-%H%M%S")))
