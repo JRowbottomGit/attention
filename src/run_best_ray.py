@@ -72,6 +72,7 @@ def loop_best(opt):
 def get_best_specific_params_dir(opt, layers, model, att_type):
   analysis = Analysis("../ray_tune/{}".format(opt['folder']))
   df = analysis.dataframe(metric=opt['metric'], mode='max')
+  print(df)
   newdf = df[(df.num_layers == layers) & (df.model == model) & (df.att_type == att_type)]
   best_params_dir = newdf.sort_values('accuracy', ascending=False)['logdir'].iloc[opt['index']]
   return best_params_dir
