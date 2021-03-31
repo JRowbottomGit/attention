@@ -75,7 +75,9 @@ def get_best_specific_params_dir(opt, layers, model, att_type):
   print(df)
   df.columns = [c.replace('config/', '') for c in df.columns]
   print(df)
-  newdf = df.loc[(df.num_layers == layers) & (df.model == model) & (df.att_type == att_type)]
+  # newdf = df.loc[(df.num_layers == layers) & (df.model == model) & (df.att_type == att_type)]
+  newdf = df.loc[(df['num_layers'] == layers) & (df['model'] == model) & (df['att_type'] == att_type)]
+
   best_params_dir = newdf.sort_values('accuracy', ascending=False)['logdir'].iloc[opt['index']]
   return best_params_dir
 
