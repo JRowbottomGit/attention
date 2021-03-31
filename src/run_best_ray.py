@@ -84,20 +84,13 @@ if __name__ == '__main__':
   parser.add_argument('--folder', type=str, default=None, help='experiment folder to read')
   parser.add_argument('--index', type=int, default=0, help='index to take from experiment folder')
   parser.add_argument('--metric', type=str, default='accuracy', help='metric to sort the hyperparameter tuning runs on')
-  parser.add_argument('--augment', action='store_true',
-                      help='double the length of the feature vector by appending zeros to stabilise ODE learning')
   parser.add_argument('--reps', type=int, default=1, help='the number of random weight initialisations to use')
   parser.add_argument('--name', type=str, default=None)
   parser.add_argument('--gpus', type=float, default=0, help='number of gpus per trial. Can be fractional')
   parser.add_argument('--cpus', type=float, default=1, help='number of cpus per trial. Can be fractional')
   parser.add_argument("--num_splits", type=int, default=0, help="Number of random slpits >= 0. 0 for planetoid split")
-  parser.add_argument("--adjoint", dest='adjoint', action='store_true',
-                      help="use the adjoint ODE method to reduce memory footprint")
-  parser.add_argument("--max_nfe", type=int, default=5000, help="Maximum number of function evaluations allowed.")
   parser.add_argument("--no_early", action="store_true",
                       help="Whether or not to use early stopping of the ODE integrator when testing.")
-
-  parser.add_argument('--earlystopxT', type=float, default=3, help='multiplier for T used to evaluate best model')
 
   args = parser.parse_args()
 
