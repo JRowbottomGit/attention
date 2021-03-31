@@ -240,7 +240,7 @@ def train_ray_int(opt, checkpoint_dir=None, data_dir="../data"):
   if torch.cuda.device_count() > 1:
     model = nn.DataParallel(model)
   parameters = [p for p in model.parameters() if p.requires_grad]
-  optimizer = get_optimizer(opt["optimizer"], parameters, lr=opt["lr"], weight_decay=opt["decay"])
+  optimizer = get_optimizer(opt["optimizer"], parameters, lr=opt["lr"], weight_decay=opt["weight_decay"])
 
   if checkpoint_dir:
     checkpoint = os.path.join(checkpoint_dir, "checkpoint")
