@@ -19,7 +19,7 @@ def loop_best(opt):
   for model in models:
     for layer in layers:
       for att_type in att_type_AGNN if model == 'AGNN' else att_type_GAT:
-        best_params_dir = get_best_specific_params_dir(opt, layers, model, att_type)
+        best_params_dir = get_best_specific_params_dir(opt, layer, model, att_type)
         with open(best_params_dir + '/params.json') as f:
           best_params = json.loads(f.read())
         # allow params specified at the cmd line to override
@@ -69,7 +69,7 @@ def loop_best(opt):
         print(log.format(test_accs.mean(), np.std(test_accs), get_sem(test_accs), mean_confidence_interval(test_accs)))
 
 
-def get_best_specific_params_dir(opt, layers, model, att_type):
+def get_best_specific_params_dir(opt, layer, model, att_type):
   analysis = Analysis("../ray_tune/{}".format(opt['folder']))
   df = analysis.dataframe(metric=opt['metric'], mode='max')
   print(df)
@@ -79,7 +79,7 @@ def get_best_specific_params_dir(opt, layers, model, att_type):
   print(layers)
   print(model)
   print(att_type)
-  newdf = df.loc[(df['num_layers'] == layers) & (df['model'] == model) & (df['att_type'] == att_type)]
+  newdf = df.loc[(df['num_layers'] == layer) & (df['model'] == model) & (df['att_type'] == att_type)]
 
   best_params_dir = newdf.sort_values('accuracy', ascending=False)['logdir'].iloc[opt['index']]
   return best_params_dir
