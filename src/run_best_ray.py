@@ -13,7 +13,7 @@ from utils import get_sem, mean_confidence_interval
 
 def loop_best(opt):
   models = ['AGNN']#,'GAT']
-  layers = [1,2]#,4,8,16]
+  layers = [1,2,4,8]#,16]
   att_type_AGNN = ['cosine','scaled_dot','pearson','spearman']
   att_type_GAT = ['cosine','scaled_dot','pearson','spearman']
   for model in models:
@@ -54,14 +54,8 @@ def loop_best(opt):
           raise_on_failed_trial=False)
 
         df = result.dataframe(metric=opt['metric'], mode="max").sort_values(opt['metric'], ascending=False)
-        # df.to_csv('../ray_results/{}_{}.csv'.format(name, time.strftime("%Y%m%d-%H%M%S")), mode='a')
-        df.to_csv('../ray_results/{}_{}.csv'.format(name, time.strftime("%Y%m%d-%H%M%S")), mode='a')
         filename = f"../ray_results/{opt['name']}.csv"
         df.to_csv(filename, mode='a', header=(not os.path.exists(filename)))
-        # try:
-        #   df.to_csv('../ray_results/{}_{}.csv'.format(name, time.strftime("%Y%m%d-%H%M%S")), mode='a')
-        # except:
-        #   pass
 
         print(df[['accuracy', 'test_acc', 'train_acc', 'best_time', 'best_epoch']])
 
