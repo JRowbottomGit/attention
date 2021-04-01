@@ -12,7 +12,7 @@ from utils import get_sem, mean_confidence_interval
 
 
 def loop_best(opt):
-  models = ['GAT']#'AGNN']#,'GAT']
+  models = ['AGNN']#,'GAT']
   layers = [1,2,4,8,16]
   att_type_AGNN = ['cosine','scaled_dot','pearson','spearman']
   att_type_GAT = ['GAT','cosine','scaled_dot','pearson','spearman']
