@@ -273,7 +273,8 @@ def train_ray_int(opt, checkpoint_dir=None, data_dir="../data"):
 def set_cora_search_space(opt):
     opt["model"] = "GAT" #"AGNN"#"GAT"
     opt["att_type"] = tune.choice(["GAT","cosine","scaled_dot","pearson","spearman"]) #,
-    opt["num_layers"] = tune.choice([1,2,4,8,16,24,32])
+    # opt["num_layers"] = tune.choice([1,2,4,8,16,24,32])
+    opt["num_layers"] = tune.choice([12, 20])
     opt['weight_decay'] = tune.loguniform(5e-5, 1e-3)  # weight decay l2 reg
     opt['num_hidden'] = tune.sample_from(lambda _: 2 ** np.random.randint(4, 8))  # hidden dim of X in dX/dt
     opt["lr"] = tune.loguniform(0.0001, 0.05)
